@@ -1,0 +1,918 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>臓器提供意思表示カード</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@300;400;500;700&family=Noto+Sans+JP:wght@300;400;500&family=IM+Fell+English:ital@0;1&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #1a1a2e;
+    --paper: #f5f0e8;
+    --paper-dark: #ede7d6;
+    --accent: #7c5c3a;
+    --accent-light: #a07848;
+    --red: #8b2020;
+    --green: #1a4a2e;
+    --border: #c8b89a;
+    --shadow: rgba(60,40,10,0.15);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Noto Sans JP', sans-serif;
+    background: #2a2018;
+    background-image:
+      radial-gradient(ellipse at 20% 50%, rgba(80,50,20,0.4) 0%, transparent 60%),
+      radial-gradient(ellipse at 80% 20%, rgba(60,40,10,0.3) 0%, transparent 50%);
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+  }
+  .card-wrap { width: 100%; max-width: 680px; }
+  .card {
+    background: var(--paper);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    box-shadow: 0 8px 40px var(--shadow), 0 2px 8px rgba(0,0,0,0.2);
+    overflow: hidden;
+    position: relative;
+  }
+  .card::before {
+    content: '';
+    position: absolute;
+    inset: 6px;
+    border: 1px solid rgba(200,184,154,0.4);
+    border-radius: 2px;
+    pointer-events: none;
+    z-index: 1;
+  }
+  .card-header {
+    background: var(--ink);
+    color: var(--paper);
+    padding: 28px 36px 24px;
+    text-align: center;
+  }
+  .card-header::after {
+    content: '';
+    display: block;
+    width: 60px;
+    height: 1px;
+    background: var(--accent-light);
+    margin: 12px auto 0;
+  }
+  .header-en {
+    font-family: 'IM Fell English', serif;
+    font-size: 11px;
+    letter-spacing: 0.3em;
+    color: var(--accent-light);
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+  .header-ja {
+    font-family: 'Noto Serif JP', serif;
+    font-size: 22px;
+    font-weight: 500;
+    letter-spacing: 0.15em;
+  }
+  .card-body { padding: 32px 36px; }
+  .person-info {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 20px;
+    margin-bottom: 24px;
+  }
+  .person-name {
+    font-family: 'Noto Serif JP', serif;
+    font-size: 26px;
+    font-weight: 500;
+    color: var(--ink);
+    letter-spacing: 0.1em;
+  }
+  .person-meta { font-size: 12px; color: #666; line-height: 1.8; text-align: right; }
+  .section-title {
+    font-size: 11px;
+    letter-spacing: 0.25em;
+    color: var(--accent);
+    text-transform: uppercase;
+    font-family: 'IM Fell English', serif;
+    margin-bottom: 14px;
+  }
+  .will-option {
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+    padding: 14px 18px;
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    margin-bottom: 10px;
+    background: var(--paper-dark);
+    transition: all 0.2s;
+  }
+  .will-option.selected { border-color: var(--green); background: #f0f5f1; }
+  .will-option.rejected { border-color: var(--red); background: #fdf3f3; }
+  .option-mark {
+    width: 28px; height: 28px;
+    border: 1.5px solid var(--border);
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0; font-size: 14px; margin-top: 2px;
+  }
+  .will-option.selected .option-mark { border-color: var(--green); background: var(--green); color: white; }
+  .will-option.rejected .option-mark { border-color: var(--red); background: var(--red); color: white; }
+  .option-text { font-size: 13.5px; line-height: 1.75; color: var(--ink); font-family: 'Noto Serif JP', serif; }
+  .option-num { font-weight: 700; margin-right: 4px; }
+  .organs-section {
+    margin-top: 22px; padding: 18px;
+    background: var(--paper-dark);
+    border: 1px solid var(--border); border-radius: 3px;
+  }
+  .organs-label { font-size: 11.5px; color: #666; margin-bottom: 12px; font-family: 'Noto Serif JP', serif; }
+  .organs-grid { display: flex; flex-wrap: wrap; gap: 8px; }
+  .organ-tag {
+    padding: 5px 12px;
+    border: 1px solid var(--border); border-radius: 2px;
+    font-size: 12px; font-family: 'Noto Serif JP', serif;
+    background: var(--paper); color: var(--ink);
+  }
+  .organ-tag.excluded { color: var(--red); border-color: var(--red); background: #fdf3f3; }
+  .organ-tag.excluded::after { content: '✕'; margin-left: 4px; font-weight: bold; }
+  .notes-section { margin-top: 22px; display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .notes-box, .sig-box {
+    padding: 14px 16px;
+    background: var(--paper-dark);
+    border: 1px solid var(--border); border-radius: 3px;
+    min-height: 80px;
+  }
+  .notes-box { grid-column: 1 / -1; }
+  .box-label { font-size: 10px; letter-spacing: 0.2em; color: var(--accent); margin-bottom: 8px; font-family: 'IM Fell English', serif; }
+  .box-content { font-size: 13px; color: var(--ink); font-family: 'Noto Serif JP', serif; line-height: 1.7; white-space: pre-line; }
+  .sig-img { font-family: 'IM Fell English', serif; font-style: italic; font-size: 18px; color: var(--ink); }
+  .card-footer {
+    border-top: 1px solid var(--border);
+    padding: 14px 36px;
+    display: flex; justify-content: space-between; align-items: center;
+    font-size: 11px; color: #888;
+  }
+
+  /* LOGIN BUTTON */
+  .login-btn {
+    margin-top: 16px;
+    width: 100%;
+    padding: 14px;
+    background: var(--ink);
+    border: none;
+    border-radius: 3px;
+    color: var(--paper);
+    font-family: 'Noto Serif JP', serif;
+    font-size: 14px;
+    letter-spacing: 0.15em;
+    cursor: pointer;
+    transition: all 0.25s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+  }
+  .login-btn:hover { background: #2d2d4a; }
+  .login-btn svg { flex-shrink: 0; }
+
+  /* MODAL */
+  .modal-overlay {
+    display: none;
+    position: fixed; inset: 0;
+    background: rgba(20,15,8,0.85);
+    z-index: 100;
+    align-items: center; justify-content: center;
+    padding: 20px;
+    backdrop-filter: blur(4px);
+  }
+  .modal-overlay.open { display: flex; }
+  .modal {
+    background: var(--paper);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    width: 100%; max-width: 520px;
+    max-height: 90vh; overflow-y: auto;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+    animation: modalIn 0.3s ease;
+  }
+  @keyframes modalIn {
+    from { opacity:0; transform: translateY(20px); }
+    to   { opacity:1; transform: translateY(0); }
+  }
+  .modal-header { background: var(--ink); color: var(--paper); padding: 22px 28px; text-align: center; }
+  .modal-header h2 { font-family: 'Noto Serif JP', serif; font-size: 16px; font-weight: 500; letter-spacing: 0.12em; }
+  .modal-header p { font-size: 11px; color: var(--accent-light); margin-top: 6px; letter-spacing: 0.1em; }
+  .modal-body { padding: 28px; }
+  .form-group { margin-bottom: 18px; }
+  .form-label { display: block; font-size: 11px; letter-spacing: 0.18em; color: var(--accent); margin-bottom: 7px; font-family: 'IM Fell English', serif; }
+  .form-input, .form-textarea, .form-select {
+    width: 100%; padding: 10px 13px;
+    border: 1px solid var(--border); border-radius: 2px;
+    background: var(--paper); color: var(--ink);
+    font-family: 'Noto Serif JP', serif; font-size: 13px;
+    outline: none; transition: border-color 0.2s;
+  }
+  .form-input:focus, .form-textarea:focus, .form-select:focus { border-color: var(--accent); }
+  .form-textarea { height: 80px; resize: vertical; line-height: 1.7; }
+  .radio-group { display: flex; flex-direction: column; gap: 8px; }
+  .radio-option {
+    display: flex; align-items: flex-start; gap: 10px;
+    padding: 12px 14px;
+    border: 1px solid var(--border); border-radius: 2px;
+    cursor: pointer; transition: all 0.2s;
+    background: var(--paper-dark);
+  }
+  .radio-option:hover { border-color: var(--accent); }
+  .radio-option input { flex-shrink: 0; margin-top: 3px; accent-color: var(--accent); }
+  .radio-option label { font-size: 12.5px; line-height: 1.65; cursor: pointer; font-family: 'Noto Serif JP', serif; }
+  .organ-checks { display: flex; flex-wrap: wrap; gap: 8px; }
+  .organ-check {
+    display: flex; align-items: center; gap: 6px;
+    padding: 6px 12px;
+    border: 1px solid var(--border); border-radius: 2px;
+    background: var(--paper); cursor: pointer;
+    font-size: 12px; font-family: 'Noto Serif JP', serif;
+    transition: all 0.2s;
+  }
+  .organ-check input { accent-color: var(--red); }
+  .organ-check.checked { border-color: var(--red); background: #fdf3f3; color: var(--red); }
+  .steps { display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 24px; }
+  .step-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--border); transition: background 0.3s; }
+  .step-dot.active { background: var(--accent); }
+  .modal-actions { display: flex; gap: 10px; margin-top: 24px; }
+  .btn-primary {
+    flex: 1; padding: 12px;
+    background: var(--ink); color: var(--paper);
+    border: none; border-radius: 2px;
+    font-family: 'Noto Serif JP', serif; font-size: 13px;
+    cursor: pointer; letter-spacing: 0.1em;
+    transition: background 0.2s;
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+  }
+  .btn-primary:hover { background: #2d2d4a; }
+  .btn-secondary {
+    padding: 12px 18px;
+    background: transparent; color: var(--ink);
+    border: 1px solid var(--border); border-radius: 2px;
+    font-family: 'Noto Serif JP', serif; font-size: 13px;
+    cursor: pointer; transition: all 0.2s;
+  }
+  .btn-secondary:hover { border-color: var(--ink); }
+  .otp-wrap { display: flex; gap: 8px; justify-content: center; margin: 10px 0; }
+  .otp-input {
+    width: 44px; height: 52px;
+    text-align: center; font-size: 22px;
+    font-family: 'IM Fell English', serif;
+    border: 1px solid var(--border); border-radius: 2px;
+    background: var(--paper); color: var(--ink);
+    outline: none; transition: border-color 0.2s;
+  }
+  .otp-input:focus { border-color: var(--accent); }
+  .alert { padding: 10px 14px; border-radius: 2px; font-size: 12px; margin-bottom: 16px; display: none; }
+  .alert.error { background: #fdf3f3; border: 1px solid var(--red); color: var(--red); display: block; }
+  .alert.success { background: #f0f5f1; border: 1px solid var(--green); color: var(--green); display: block; }
+  .divider { border: none; border-top: 1px solid var(--border); margin: 20px 0; }
+  .section-sub { font-size: 11.5px; color: #666; margin-bottom: 10px; font-family: 'Noto Serif JP', serif; }
+  .kinship-box {
+    background: var(--paper-dark); border: 1px solid var(--border); border-radius: 3px;
+    padding: 14px 16px; margin-top: 10px;
+    font-size: 12px; color: #555; line-height: 1.8; font-family: 'Noto Serif JP', serif;
+  }
+  .badge { display: inline-block; padding: 2px 8px; font-size: 10px; border-radius: 10px; letter-spacing: 0.1em; font-family: 'IM Fell English', serif; }
+  .badge-registered { background: #f0f5f1; color: var(--green); border: 1px solid var(--green); }
+  .badge-none { background: #fdf3f3; color: var(--red); border: 1px solid var(--red); }
+
+  /* WebAuthn biometric button */
+  .biometric-btn {
+    width: 100%; padding: 14px;
+    background: linear-gradient(135deg, #1a1a2e 0%, #2d2d4a 100%);
+    border: 1px solid #4a4a7a;
+    border-radius: 3px;
+    color: var(--paper);
+    font-family: 'Noto Serif JP', serif;
+    font-size: 13px; letter-spacing: 0.1em;
+    cursor: pointer; transition: all 0.25s;
+    display: flex; align-items: center; justify-content: center; gap: 10px;
+    margin-bottom: 12px;
+  }
+  .biometric-btn:hover { border-color: #8080c0; box-shadow: 0 0 12px rgba(100,100,200,0.2); }
+  .biometric-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+  .biometric-icon { font-size: 20px; }
+
+  .or-divider {
+    display: flex; align-items: center; gap: 12px;
+    margin: 16px 0; color: #aaa; font-size: 11px;
+    font-family: 'IM Fell English', serif; letter-spacing: 0.1em;
+  }
+  .or-divider::before, .or-divider::after {
+    content: ''; flex: 1; height: 1px; background: var(--border);
+  }
+
+  .webauthn-status {
+    text-align: center; padding: 8px;
+    font-size: 11px; color: #888;
+    font-family: 'Noto Serif JP', serif;
+    margin-bottom: 12px;
+  }
+
+  .register-passkey-btn {
+    width: 100%; padding: 10px;
+    background: transparent;
+    border: 1px dashed var(--border);
+    border-radius: 2px; color: var(--accent);
+    font-family: 'Noto Serif JP', serif; font-size: 12px;
+    cursor: pointer; transition: all 0.2s; margin-top: 8px;
+  }
+  .register-passkey-btn:hover { border-color: var(--accent); background: var(--paper-dark); }
+
+  @media (max-width: 480px) {
+    .card-body { padding: 20px; }
+    .card-footer { padding: 12px 20px; flex-direction: column; gap: 4px; text-align: center; }
+    .notes-section { grid-template-columns: 1fr; }
+    .notes-box { grid-column: auto; }
+    .person-info { flex-direction: column; align-items: flex-start; gap: 8px; }
+    .person-meta { text-align: left; }
+  }
+</style>
+</head>
+<body>
+
+<div class="card-wrap">
+  <div class="card" id="viewCard">
+    <div class="card-header">
+      <div class="header-en">Organ Donation Intent Card</div>
+      <div class="header-ja">臓器提供意思表示カード</div>
+    </div>
+    <div class="card-body">
+      <div class="person-info">
+        <div>
+          <div style="font-size:11px;color:#888;margin-bottom:4px;letter-spacing:0.1em;">本人氏名</div>
+          <div class="person-name" id="viewName">未登録</div>
+        </div>
+        <div class="person-meta">
+          <div id="viewBirth">生年月日：—</div>
+          <div id="viewBlood">血液型：—</div>
+          <div id="viewBadge" style="margin-top:6px;"></div>
+        </div>
+      </div>
+
+      <div class="section-title">意思表示 / Declaration of Intent</div>
+      <div id="willOptions">
+        <div class="will-option" id="opt1">
+          <div class="option-mark">1</div>
+          <div class="option-text"><span class="option-num">1.</span>私は、脳死後及び心臓が停止した死後のいずれでも、移植のために臓器を提供します。</div>
+        </div>
+        <div class="will-option" id="opt2">
+          <div class="option-mark">2</div>
+          <div class="option-text"><span class="option-num">2.</span>私は、心臓が停止した死後に限り、移植のために臓器を提供します。</div>
+        </div>
+        <div class="will-option" id="opt3">
+          <div class="option-mark">3</div>
+          <div class="option-text"><span class="option-num">3.</span>私は、臓器を提供しません。</div>
+        </div>
+      </div>
+
+      <div class="organs-section" id="organsSection" style="display:none;">
+        <div class="organs-label">提供を希望しない臓器（✕ 印）</div>
+        <div class="organs-grid" id="viewOrgans"></div>
+      </div>
+
+      <div class="notes-section">
+        <div class="notes-box">
+          <div class="box-label">Special Notes / 特記欄</div>
+          <div class="box-content" id="viewNotes"><span style="color:#bbb;font-style:italic;">—</span></div>
+        </div>
+        <div class="sig-box">
+          <div class="box-label">本人署名</div>
+          <div class="box-content sig-img" id="viewSig"><span style="color:#bbb;font-size:12px;font-style:normal;">—</span></div>
+        </div>
+        <div class="sig-box">
+          <div class="box-label">家族署名</div>
+          <div class="box-content sig-img" id="viewFamilySig"><span style="color:#bbb;font-size:12px;font-style:normal;">—</span></div>
+        </div>
+      </div>
+    </div>
+    <div class="card-footer">
+      <span id="viewUpdated">最終更新：—</span>
+      <span style="letter-spacing:0.05em;">Japan Organ Transplant Network</span>
+    </div>
+  </div>
+
+  <button class="login-btn" onclick="openAuth()">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+      <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+    </svg>
+    ログイン（意思を編集する）
+  </button>
+</div>
+
+<!-- AUTH MODAL -->
+<div class="modal-overlay" id="authModal">
+  <div class="modal">
+    <div class="modal-header">
+      <h2>ログイン</h2>
+      <p>Identity Verification — 本人認証</p>
+    </div>
+    <div class="modal-body">
+      <div class="steps">
+        <div class="step-dot active" id="dot1"></div>
+        <div style="width:30px;height:1px;background:var(--border);"></div>
+        <div class="step-dot" id="dot2"></div>
+      </div>
+
+      <!-- Step 1: Password + Biometric -->
+      <div id="authStep1">
+        <div id="authAlert1" class="alert"></div>
+
+        <!-- Biometric option -->
+        <div id="biometricSection">
+          <button class="biometric-btn" id="biometricBtn" onclick="loginWithBiometric()">
+            <span class="biometric-icon" id="biometricIcon">🔒</span>
+            <span id="biometricLabel">生体認証でログイン</span>
+          </button>
+          <div class="webauthn-status" id="webauthnStatus">確認中...</div>
+          <div class="or-divider">または</div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">パスワード / Password</label>
+          <input type="password" class="form-input" id="authPassword" placeholder="パスワードを入力" onkeydown="if(event.key==='Enter')verifyPassword()">
+        </div>
+        <div class="modal-actions">
+          <button class="btn-secondary" onclick="closeModal('authModal')">キャンセル</button>
+          <button class="btn-primary" onclick="verifyPassword()">次へ →</button>
+        </div>
+      </div>
+
+      <!-- Step 2: OTP -->
+      <div id="authStep2" style="display:none;">
+        <div id="authAlert2" class="alert"></div>
+        <p style="font-size:12.5px;color:#555;text-align:center;margin-bottom:16px;font-family:'Noto Serif JP',serif;">
+          確認コードを入力してください<br>
+          <span style="font-size:11px;color:#999;">（デモ用コード：<strong>123456</strong>）</span>
+        </p>
+        <div class="otp-wrap">
+          <input type="text" maxlength="1" class="otp-input" id="otp0" oninput="otpNext(this,1)" onkeydown="otpBack(event,this,null)">
+          <input type="text" maxlength="1" class="otp-input" id="otp1" oninput="otpNext(this,2)" onkeydown="otpBack(event,this,0)">
+          <input type="text" maxlength="1" class="otp-input" id="otp2" oninput="otpNext(this,3)" onkeydown="otpBack(event,this,1)">
+          <input type="text" maxlength="1" class="otp-input" id="otp3" oninput="otpNext(this,4)" onkeydown="otpBack(event,this,2)">
+          <input type="text" maxlength="1" class="otp-input" id="otp4" oninput="otpNext(this,5)" onkeydown="otpBack(event,this,3)">
+          <input type="text" maxlength="1" class="otp-input" id="otp5" oninput="checkOtpComplete()" onkeydown="otpBack(event,this,4)">
+        </div>
+        <div class="modal-actions">
+          <button class="btn-secondary" onclick="closeModal('authModal')">キャンセル</button>
+          <button class="btn-primary" onclick="verifyOTP()">認証して編集 →</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- EDIT MODAL -->
+<div class="modal-overlay" id="editModal">
+  <div class="modal">
+    <div class="modal-header">
+      <h2>意思表示の編集</h2>
+      <p>Edit Your Declaration</p>
+    </div>
+    <div class="modal-body">
+      <div id="editAlert" class="alert"></div>
+
+      <div class="form-group">
+        <label class="form-label">氏名 / Full Name</label>
+        <input type="text" class="form-input" id="editName" placeholder="例：山田 太郎">
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+        <div class="form-group">
+          <label class="form-label">生年月日</label>
+          <input type="date" class="form-input" id="editBirth">
+        </div>
+        <div class="form-group">
+          <label class="form-label">血液型</label>
+          <select class="form-select" id="editBlood">
+            <option value="">—</option>
+            <option>A型</option><option>B型</option><option>O型</option><option>AB型</option>
+          </select>
+        </div>
+      </div>
+
+      <hr class="divider">
+
+      <div class="form-group">
+        <label class="form-label">意思表示 / Declaration</label>
+        <div class="radio-group">
+          <div class="radio-option">
+            <input type="radio" name="will" id="will1" value="1">
+            <label for="will1">1. 脳死後及び心臓が停止した死後のいずれでも臓器を提供します</label>
+          </div>
+          <div class="radio-option">
+            <input type="radio" name="will" id="will2" value="2">
+            <label for="will2">2. 心臓が停止した死後に限り、臓器を提供します</label>
+          </div>
+          <div class="radio-option">
+            <input type="radio" name="will" id="will3" value="3">
+            <label for="will3">3. 臓器を提供しません</label>
+          </div>
+        </div>
+      </div>
+
+      <div id="organSection" style="display:none;">
+        <hr class="divider">
+        <div class="form-group">
+          <label class="form-label">提供しない臓器（✕ をつける）</label>
+          <div class="section-sub">提供を希望しない臓器にチェックしてください</div>
+          <div class="organ-checks" id="organChecks"></div>
+        </div>
+        <hr class="divider">
+        <div class="form-group">
+          <label class="form-label">特記欄 / Special Notes</label>
+          <div class="section-sub">組織提供（皮膚・心臓弁・血管・骨）や親族優先提供の意思を記載できます</div>
+          <textarea class="form-textarea" id="editNotes" placeholder="例：皮膚・心臓弁も提供可&#10;例：親族優先"></textarea>
+        </div>
+        <div class="kinship-box">
+          <strong>【親族優先提供について】</strong><br>
+          配偶者・子・父母への優先提供を希望する場合は「親族優先」と特記欄に記入してください。<br>
+          ・婚姻届を提出した配偶者（事実婚を除く）<br>
+          ・実の親子および特別養子縁組による養子・養父母が対象です。<br>
+          ・医学的適合条件を満たす必要があります。
+        </div>
+      </div>
+
+      <hr class="divider">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+        <div class="form-group">
+          <label class="form-label">本人署名</label>
+          <input type="text" class="form-input" id="editSig" placeholder="例：山田 太郎">
+        </div>
+        <div class="form-group">
+          <label class="form-label">家族署名</label>
+          <input type="text" class="form-input" id="editFamilySig" placeholder="例：山田 花子">
+        </div>
+      </div>
+
+      <hr class="divider">
+      <div class="form-group">
+        <label class="form-label">新しいパスワード（変更する場合）</label>
+        <input type="password" class="form-input" id="editNewPass" placeholder="変更しない場合は空欄">
+      </div>
+
+      <!-- Passkey registration inside edit modal -->
+      <button class="register-passkey-btn" id="registerPasskeyBtn" onclick="registerPasskey()" style="display:none;">
+        🔑 このデバイスで生体認証（Face ID / Touch ID）を登録する
+      </button>
+
+      <div class="modal-actions">
+        <button class="btn-secondary" onclick="closeModal('editModal')">キャンセル</button>
+        <button class="btn-primary" onclick="saveData()">保存する</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const ORGANS = ['心臓','肺','肝臓','腎臓','膵臓','小腸','眼球'];
+const DEFAULT_PASS = 'demo1234';
+const DEMO_OTP = '123456';
+const RP_ID = location.hostname || 'localhost';
+const RP_NAME = '臓器提供意思表示カード';
+
+let state = JSON.parse(localStorage.getItem('donationCard') || 'null') || {
+  name: '', birth: '', blood: '',
+  will: 0, excludedOrgans: [], notes: '',
+  sig: '', familySig: '',
+  password: DEFAULT_PASS,
+  passkeyCredentialId: null,
+  updatedAt: null
+};
+
+// ── WebAuthn helpers ──
+function buf2b64(buf) {
+  return btoa(String.fromCharCode(...new Uint8Array(buf)));
+}
+function b642buf(b64) {
+  const bin = atob(b64);
+  return Uint8Array.from(bin, c => c.charCodeAt(0)).buffer;
+}
+function randomBytes(len) {
+  return crypto.getRandomValues(new Uint8Array(len));
+}
+
+const webAuthnSupported = !!(navigator.credentials && window.PublicKeyCredential);
+let passkeyAvailable = false;
+
+async function checkPasskeySupport() {
+  if (!webAuthnSupported) return false;
+  try {
+    const ok = await PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable();
+    return ok;
+  } catch { return false; }
+}
+
+async function initBiometricUI() {
+  const statusEl = document.getElementById('webauthnStatus');
+  const btn = document.getElementById('biometricBtn');
+  const icon = document.getElementById('biometricIcon');
+  const label = document.getElementById('biometricLabel');
+
+  passkeyAvailable = await checkPasskeySupport();
+
+  if (!webAuthnSupported) {
+    statusEl.textContent = 'このブラウザは生体認証に対応していません';
+    btn.disabled = true;
+    return;
+  }
+
+  if (!passkeyAvailable) {
+    statusEl.textContent = 'このデバイスは生体認証センサーに対応していません';
+    btn.disabled = true;
+    return;
+  }
+
+  if (!state.passkeyCredentialId) {
+    statusEl.textContent = '生体認証未登録 — 初回はパスワードでログイン後に登録できます';
+    btn.disabled = true;
+    icon.textContent = '🔒';
+    label.textContent = '生体認証（未登録）';
+    return;
+  }
+
+  // Detect Face ID vs fingerprint
+  const isMobile = /iPhone|iPad|Android/i.test(navigator.userAgent);
+  const isMac = /Mac/.test(navigator.userAgent);
+  if (isMobile && /iPhone|iPad/.test(navigator.userAgent)) {
+    icon.textContent = '👤'; label.textContent = 'Face ID でログイン';
+  } else if (isMac) {
+    icon.textContent = '☝️'; label.textContent = 'Touch ID でログイン';
+  } else {
+    icon.textContent = '🪪'; label.textContent = '生体認証でログイン';
+  }
+  btn.disabled = false;
+  statusEl.textContent = '登録済み — 生体認証が使えます';
+}
+
+async function loginWithBiometric() {
+  if (!state.passkeyCredentialId) return;
+  const btn = document.getElementById('biometricBtn');
+  btn.disabled = true;
+  btn.querySelector('span:last-child').textContent = '認証中...';
+
+  try {
+    const challenge = randomBytes(32);
+    const assertion = await navigator.credentials.get({
+      publicKey: {
+        challenge,
+        rpId: RP_ID,
+        allowCredentials: [{
+          type: 'public-key',
+          id: b642buf(state.passkeyCredentialId)
+        }],
+        userVerification: 'required',
+        timeout: 60000
+      }
+    });
+
+    if (assertion) {
+      // Biometric verified — skip OTP, go straight to edit
+      closeModal('authModal');
+      openEditModal();
+    }
+  } catch (err) {
+    const a = document.getElementById('authAlert1');
+    if (err.name === 'NotAllowedError') {
+      a.textContent = '生体認証がキャンセルされました。パスワードでログインしてください。';
+    } else {
+      a.textContent = '生体認証に失敗しました: ' + err.message;
+    }
+    a.className = 'alert error';
+    btn.disabled = false;
+    await initBiometricUI();
+  }
+}
+
+async function registerPasskey() {
+  if (!passkeyAvailable) {
+    alert('このデバイスは生体認証に対応していません');
+    return;
+  }
+  const btn = document.getElementById('registerPasskeyBtn');
+  btn.textContent = '登録中...';
+  btn.disabled = true;
+
+  try {
+    const userId = randomBytes(16);
+    const challenge = randomBytes(32);
+    const displayName = state.name || 'ユーザー';
+
+    const credential = await navigator.credentials.create({
+      publicKey: {
+        challenge,
+        rp: { id: RP_ID, name: RP_NAME },
+        user: {
+          id: userId,
+          name: displayName,
+          displayName
+        },
+        pubKeyCredParams: [
+          { type: 'public-key', alg: -7 },   // ES256
+          { type: 'public-key', alg: -257 }  // RS256
+        ],
+        authenticatorSelection: {
+          authenticatorAttachment: 'platform',
+          userVerification: 'required',
+          residentKey: 'preferred'
+        },
+        timeout: 60000,
+        attestation: 'none'
+      }
+    });
+
+    // Store credential ID (public key only — no secrets stored)
+    state.passkeyCredentialId = buf2b64(credential.rawId);
+    localStorage.setItem('donationCard', JSON.stringify(state));
+
+    btn.textContent = '✓ 生体認証を登録しました！次回からFace ID / Touch IDでログインできます';
+    btn.style.color = 'var(--green)';
+    btn.style.borderColor = 'var(--green)';
+  } catch (err) {
+    btn.disabled = false;
+    btn.textContent = '🔑 生体認証の登録に失敗しました — 再試行';
+    if (err.name !== 'NotAllowedError') console.error(err);
+  }
+}
+
+// ── Card render ──
+function renderCard() {
+  document.getElementById('viewName').textContent = state.name || '未登録';
+  document.getElementById('viewBadge').innerHTML = state.name
+    ? '<span class="badge badge-registered">登録済み</span>'
+    : '<span class="badge badge-none">未登録</span>';
+  document.getElementById('viewBirth').textContent = state.birth ? '生年月日：' + state.birth.replace(/-/g,'/') : '生年月日：—';
+  document.getElementById('viewBlood').textContent = state.blood ? '血液型：' + state.blood : '血液型：—';
+
+  [1,2,3].forEach(n => {
+    const el = document.getElementById('opt' + n);
+    const mark = el.querySelector('.option-mark');
+    el.className = 'will-option' + (state.will == n ? (n==3 ? ' rejected' : ' selected') : '');
+    mark.textContent = state.will == n ? (n==3 ? '✕' : '○') : n;
+  });
+
+  const orgSec = document.getElementById('organsSection');
+  if ((state.will == 1 || state.will == 2) && state.name) {
+    orgSec.style.display = 'block';
+    document.getElementById('viewOrgans').innerHTML = ORGANS.map(o => {
+      const ex = state.excludedOrgans.includes(o);
+      return `<span class="organ-tag ${ex?'excluded':''}">${o}</span>`;
+    }).join('');
+  } else { orgSec.style.display = 'none'; }
+
+  document.getElementById('viewNotes').innerHTML = state.notes || '<span style="color:#bbb;font-style:italic;">—</span>';
+  document.getElementById('viewSig').innerHTML = state.sig || '<span style="color:#bbb;font-size:12px;font-style:normal;">—</span>';
+  document.getElementById('viewFamilySig').innerHTML = state.familySig || '<span style="color:#bbb;font-size:12px;font-style:normal;">—</span>';
+  document.getElementById('viewUpdated').textContent = state.updatedAt
+    ? '最終更新：' + new Date(state.updatedAt).toLocaleString('ja-JP') : '最終更新：—';
+}
+
+function buildOrganChecks() {
+  document.getElementById('organChecks').innerHTML = ORGANS.map(o => `
+    <label class="organ-check ${state.excludedOrgans.includes(o)?'checked':''}" id="oc_${o}" onclick="toggleOrgan('${o}')">
+      <input type="checkbox" ${state.excludedOrgans.includes(o)?'checked':''}> ${o}
+    </label>`).join('');
+}
+
+function toggleOrgan(name) {
+  setTimeout(() => {
+    const cb = document.querySelector(`#oc_${name} input`);
+    document.getElementById(`oc_${name}`).classList.toggle('checked', cb.checked);
+  }, 0);
+}
+
+function openModal(id) { document.getElementById(id).classList.add('open'); }
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+
+async function openAuth() {
+  document.getElementById('authPassword').value = '';
+  document.getElementById('authAlert1').className = 'alert';
+  document.getElementById('authStep1').style.display = 'block';
+  document.getElementById('authStep2').style.display = 'none';
+  document.getElementById('dot1').classList.add('active');
+  document.getElementById('dot2').classList.remove('active');
+  openModal('authModal');
+  await initBiometricUI();
+}
+
+function verifyPassword() {
+  const pw = document.getElementById('authPassword').value;
+  if (pw === state.password) {
+    document.getElementById('authStep1').style.display = 'none';
+    document.getElementById('authStep2').style.display = 'block';
+    document.getElementById('dot2').classList.add('active');
+    for (let i=0;i<6;i++) document.getElementById('otp'+i).value='';
+    document.getElementById('otp0').focus();
+    document.getElementById('authAlert2').className = 'alert';
+  } else {
+    const a = document.getElementById('authAlert1');
+    a.textContent = 'パスワードが正しくありません。（デモ用：demo1234）';
+    a.className = 'alert error';
+  }
+}
+
+function otpNext(el, nextIdx) { if (el.value && nextIdx < 6) document.getElementById('otp'+nextIdx).focus(); }
+function otpBack(e, el, prevIdx) { if (e.key==='Backspace' && !el.value && prevIdx!==null) document.getElementById('otp'+prevIdx).focus(); }
+function checkOtpComplete() {
+  const code = [0,1,2,3,4,5].map(i=>document.getElementById('otp'+i).value).join('');
+  if (code.length === 6) verifyOTP();
+}
+
+function verifyOTP() {
+  const code = [0,1,2,3,4,5].map(i=>document.getElementById('otp'+i).value).join('');
+  if (code === DEMO_OTP) {
+    closeModal('authModal');
+    openEditModal();
+  } else {
+    const a = document.getElementById('authAlert2');
+    a.textContent = '確認コードが正しくありません。（デモ：123456）';
+    a.className = 'alert error';
+  }
+}
+
+function openEditModal() {
+  document.getElementById('editName').value = state.name;
+  document.getElementById('editBirth').value = state.birth;
+  document.getElementById('editBlood').value = state.blood;
+  document.getElementById('editSig').value = state.sig;
+  document.getElementById('editFamilySig').value = state.familySig;
+  document.getElementById('editNotes').value = state.notes;
+  document.getElementById('editNewPass').value = '';
+  document.getElementById('editAlert').className = 'alert';
+  if (state.will) document.querySelector(`input[name="will"][value="${state.will}"]`).checked = true;
+
+  const orgSec = document.getElementById('organSection');
+  orgSec.style.display = (state.will==1||state.will==2) ? 'block' : 'none';
+  buildOrganChecks();
+
+  document.querySelectorAll('input[name="will"]').forEach(r => {
+    r.onchange = () => { orgSec.style.display = (r.value==1||r.value==2)?'block':'none'; };
+  });
+
+  // Show passkey registration button always (let user try)
+  const regBtn = document.getElementById('registerPasskeyBtn');
+  regBtn.style.display = 'block';
+  regBtn.disabled = false;
+  if (state.passkeyCredentialId) {
+    regBtn.textContent = '✓ 生体認証登録済み（再登録する場合はタップ）';
+    regBtn.style.color = 'var(--green)';
+    regBtn.style.borderColor = 'var(--green)';
+  } else {
+    regBtn.textContent = '🔑 このデバイスで生体認証（Face ID / Touch ID）を登録する';
+    regBtn.style.color = '';
+    regBtn.style.borderColor = '';
+  }
+
+  openModal('editModal');
+}
+
+function saveData() {
+  const name = document.getElementById('editName').value.trim();
+  if (!name) {
+    const a = document.getElementById('editAlert');
+    a.textContent = '氏名を入力してください。'; a.className = 'alert error'; return;
+  }
+  const willEl = document.querySelector('input[name="will"]:checked');
+  if (!willEl) {
+    const a = document.getElementById('editAlert');
+    a.textContent = '意思表示を選択してください。'; a.className = 'alert error'; return;
+  }
+  const willVal = parseInt(willEl.value);
+  let excluded = [];
+  if (willVal==1||willVal==2) {
+    document.querySelectorAll('#organChecks input:checked').forEach(cb => {
+      excluded.push(cb.parentElement.textContent.trim());
+    });
+  }
+  const newPass = document.getElementById('editNewPass').value;
+  state = {
+    ...state, name,
+    birth: document.getElementById('editBirth').value,
+    blood: document.getElementById('editBlood').value,
+    will: willVal, excludedOrgans: excluded,
+    notes: document.getElementById('editNotes').value.trim(),
+    sig: document.getElementById('editSig').value.trim(),
+    familySig: document.getElementById('editFamilySig').value.trim(),
+    password: newPass || state.password,
+    updatedAt: new Date().toISOString()
+  };
+  localStorage.setItem('donationCard', JSON.stringify(state));
+  renderCard();
+  closeModal('editModal');
+}
+
+renderCard();
+</script>
+</body>
+</html>
